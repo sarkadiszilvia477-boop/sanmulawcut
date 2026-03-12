@@ -389,15 +389,16 @@ function setupDraggable(element, pointIndex, handleInfo) {
     let isDragging = false;
     let containerRect;
     
-    element.addEventListener('mousedown', (e) => {
+    element.addEventListener('pointerdown', (e) => {
         isDragging = true;
+        element.setPointerCapture(e.pointerId);
         element.classList.add('dragging');
         containerRect = DOM.splitLinesContainer.getBoundingClientRect();
         document.body.style.cursor = 'ns-resize';
         e.preventDefault();
     });
     
-    window.addEventListener('mousemove', (e) => {
+    element.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         
         let yPos = e.clientY - containerRect.top;
@@ -413,9 +414,19 @@ function setupDraggable(element, pointIndex, handleInfo) {
         handleInfo.textContent = `y:${originalY}`;
     });
     
-    window.addEventListener('mouseup', () => {
+    element.addEventListener('pointerup', (e) => {
         if (isDragging) {
             isDragging = false;
+            element.releasePointerCapture(e.pointerId);
+            element.classList.remove('dragging');
+            document.body.style.cursor = 'default';
+        }
+    });
+
+    element.addEventListener('pointercancel', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            element.releasePointerCapture(e.pointerId);
             element.classList.remove('dragging');
             document.body.style.cursor = 'default';
         }

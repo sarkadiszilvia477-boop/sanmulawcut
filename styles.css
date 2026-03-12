@@ -541,6 +541,7 @@ canvas {
     z-index: 10;
     display: flex;
     align-items: center;
+    touch-action: none;
 }
 
 .split-line::before {
@@ -666,3 +667,60 @@ canvas {
 .drop-msg h2 { font-size: 1.5rem; font-weight: 600; }
 
 .hidden { display: none !important; }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .editor-workspace {
+        flex-direction: column-reverse;
+    }
+
+    .settings-panel {
+        width: 100%;
+        flex: 0 0 auto;
+        max-height: 45vh;
+        border-right: none;
+        border-top: 1px solid var(--border);
+        padding: 20px 24px;
+        gap: 32px;
+    }
+
+    .canvas-preview-area {
+        flex: 1 1 auto;
+        padding: 24px 16px;
+    }
+
+    .landing-content {
+        padding: 24px;
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .header-actions .btn.outline-pill {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .header-brand {
+        font-size: 0.9rem;
+    }
+    
+    .scroll-instruction {
+        left: 50%;
+        bottom: calc(45vh + 16px);
+    }
+
+    .split-line::after {
+        left: -16px;
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+    
+    .split-line .drag-handle {
+        right: -16px;
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+}
