@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>森律的法律工具之长截图分割</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Dependencies -->
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- JSZip for image packing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Landing State -->
+    <div id="landing-view" class="view-state active">
+        <div class="landing-content">
+            <div class="brand-logo"><i class="fa-solid fa-leaf"></i></div>
+            <div class="hero-graphic">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h1 class="hero-title">森律的法律工具之<br>长截图分割</h1>
+
+            <div class="hero-action">
+                <button class="btn black-pill" onclick="document.getElementById('file-input').click()">
+                    上传长截图
+                </button>
+                <input type="file" id="file-input" accept="image/png, image/jpeg, image/webp" multiple hidden>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor State -->
+    <div id="editor-view" class="view-state">
+        <header class="editor-header">
+            <div class="header-brand">
+                <i class="fa-solid fa-leaf" style="color:var(--text-dark); margin-right:8px;"></i> 森律的法律工具
+            </div>
+
+            <div class="file-nav" id="file-nav-container" style="display: none;">
+                <button id="btn-prev-file" class="icon-btn" title="上一张"><i
+                        class="fa-solid fa-chevron-left"></i></button>
+                <span id="file-counter" class="file-counter-text">1 / 1</span>
+                <button id="btn-next-file" class="icon-btn" title="下一张"><i
+                        class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <div class="header-actions">
+                <button id="btn-reupload" class="btn outline-pill"><i class="fa-solid fa-arrow-rotate-left"></i>
+                    返回主页上传</button>
+            </div>
+        </header>
+
+        <main class="editor-workspace">
+            <!-- Left: Settings Panel -->
+            <aside class="settings-panel">
+                <div class="panel-section">
+                    <h3>切割设置</h3>
+                    <div class="control-group">
+                        <label for="split-count">预计分割段数</label>
+                        <div class="slider-container">
+                            <input type="range" id="split-count" min="2" max="20" value="4">
+                            <span id="split-count-val" class="value-display">4 段</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="tolerance">容错避让范围 (px)</label>
+                        <div class="slider-container">
+                            <input type="range" id="tolerance" min="0" max="800" value="300" step="50">
+                            <span id="tolerance-val" class="value-display">±300px</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>原图色彩环境</label>
+                        <div class="radio-group">
+                            <label class="radio-btn">
+                                <input type="radio" name="bg-type" value="light" checked>
+                                <span class="btn-text">浅色环境</span>
+                            </label>
+                            <label class="radio-btn">
+                                <input type="radio" name="bg-type" value="dark">
+                                <span class="btn-text">深色模式</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button id="btn-auto-split" class="btn outline-pill w-full mt-4"><i
+                            class="fa-solid fa-wand-magic-sparkles"></i> 重新计算</button>
+                </div>
+
+                <div class="panel-section">
+                    <h3>导出设置</h3>
+                    <div class="control-group">
+                        <label>页面布局</label>
+                        <div class="select-wrapper">
+                            <select id="images-per-page">
+                                <option value="1">1张/页</option>
+                                <option value="2">2张/页</option>
+                                <option value="4" selected>4张/页</option>
+                                <option value="6">6张/页</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="export-actions">
+                        <button id="btn-export-pdf" class="btn black-pill w-full"><i class="fa-solid fa-file-pdf"></i>
+                            导出PDF</button>
+                        <button id="btn-export-zip" class="btn outline-pill w-full"><i class="fa-solid fa-image"></i>
+                            导出图片</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right: Canvas Preview Area -->
+            <section class="canvas-preview-area" id="canvas-wrapper">
+                <div class="file-title" id="file-info-name">当前文件.jpg</div>
+                <div class="scroll-instruction" id="scroll-instruction">
+                    <span><i class="fa-solid fa-hand-pointer"></i> 可拖拽剪裁线上下微调</span>
+                </div>
+                <!-- The master image goes here -->
+                <canvas id="master-canvas"></canvas>
+
+                <!-- Overlay for draggable split lines -->
+                <div id="split-lines-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Drag and drop hidden overlay -->
+    <div id="drag-drop-overlay" class="drag-drop-overlay hidden">
+        <div class="drop-msg">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h2>拖拽至此上传</h2>
+        </div>
+    </div>
+    
+    <!-- Site Watermark -->
+    <div class="site-watermark">@罗一森律师</div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <div class="loading-text">处理中...</div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+
+</html>
